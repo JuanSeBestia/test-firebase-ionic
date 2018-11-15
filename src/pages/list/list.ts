@@ -1,37 +1,75 @@
 import { Component } from '@angular/core';
-import { NavController, NavParams } from 'ionic-angular';
+import { IonicPage, NavController, AlertController } from 'ionic-angular';
+import { AngularFireList, AngularFireDatabase } from 'angularfire2/database';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
 
+@IonicPage({
+  segment: 'list'
+})
 @Component({
   selector: 'page-list',
   templateUrl: 'list.html'
 })
 export class ListPage {
-  selectedItem: any;
-  icons: string[];
-  items: Array<{title: string, note: string, icon: string}>;
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
-    // If we navigated to this page, we will have an item available as a nav param
-    this.selectedItem = navParams.get('item');
+  tasksRef: AngularFireList<any>;
+  tasks: Observable<any[]>;
 
-    // Let's populate this page with some filler content for funzies
-    this.icons = ['flask', 'wifi', 'beer', 'football', 'basketball', 'paper-plane',
-    'american-football', 'boat', 'bluetooth', 'build'];
-
-    this.items = [];
-    for (let i = 1; i < 11; i++) {
-      this.items.push({
-        title: 'Item ' + i,
-        note: 'This is item #' + i,
-        icon: this.icons[Math.floor(Math.random() * this.icons.length)]
+  constructor(
+    public navCtrl: NavController,
+    public alertCtrl: AlertController,
+    public database: AngularFireDatabase
+  ) {
+    this.tasksRef = this.database.list('tasks');
+    this.tasks = this.tasksRef.snapshotChanges()
+      .map(changes => { 
+        return changes.map(c => ({ key: c.payload.key, ...c.payload.val() }));
       });
-    }
   }
 
-  itemTapped(event, item) {
-    // That's right, we're pushing to ourselves!
-    this.navCtrl.push(ListPage, {
-      item: item
+  createTask() {
+    let newTaskModal = this.alertCtrl.create({
+      title: 'New Task',
+      message: "Enter a title for your new task",
+      inputs: [
+        {
+          name: 'title',
+          placeholder: 'Title'
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          handler: data => {
+            console.log('Cancel clicked');
+          }
+        },
+        {
+          text: 'Save',
+          handler: data => {
+            this.tasksRef.push({
+              title: data.title,
+              done: false
+            });
+          }
+        }
+      ]
+    });
+    newTaskModal.present(newTaskModal);
+  }
+
+  updateTask(task) {
+    this.tasksRef.update(task.key, {
+      title: task.title,
+      done: !task.done
     });
   }
+
+  removeTask(task) {
+    console.log(task);
+    this.tasksRef.remove(task.key);
+
+  }
+
 }
