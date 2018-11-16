@@ -21,5 +21,7 @@
     <br>In page list you can see
   </p>
 
+  <firebase-ui (signInSuccessWithAuthResult)="successLogin($event)" (signInFailure)="errorLogin($event)"></firebase-ui>
+
   <button ion-button secondary menuToggle>Toggle Menu</button>
 </ion-content>

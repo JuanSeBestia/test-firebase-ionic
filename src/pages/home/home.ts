@@ -11,4 +11,12 @@ export class HomePage {
 
   }
 
+  successLogin(e){
+    console.log("successLogin:",{event:e})
+  }
+
+  errorLogin(e){
+    console.log("errorLogin:",{event:e})
+  }
+
 }
